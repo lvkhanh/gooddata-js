@@ -1,6 +1,8 @@
-// (C) 2007-2017 GoodData Corporation
+// (C) 2007-2019 GoodData Corporation
 import { XhrModule, ApiResponseError, ApiResponse } from "./xhr";
 import { ProjectModule } from "./project";
+import { IUsersListOptions, IUserInfo } from "./interfaces";
+import { queryString } from "./util";
 
 export class UserModule {
     constructor(private xhr: XhrModule) {}
@@ -180,5 +182,55 @@ export class UserModule {
             .get("/gdc/app/account/bootstrap")
             .then((r: any) => r.getData())
             .then((result: any) => result.bootstrapResource.current.featureFlags);
+    }
+
+    /**
+     * return list of Users defend on query params
+     *  @method getUserslist
+     */
+    public async getUserslist(
+        projectId: string,
+        userOptions: IUsersListOptions = {
+            userState: "ACTIVE",
+        },
+    ) {
+        const { prefixSearch, offset, limit, userState } = userOptions;
+        const queryParams = { userState, offset, limit };
+
+        if (prefixSearch) {
+            userOptions.prefixSearch = prefixSearch ? `%${prefixSearch}` : "";
+        }
+
+        const uri = `/gdc/md/${projectId}/userlist${queryString(queryParams)}`;
+
+        try {
+            return await this.partialFetchingUsers(uri).then((userList: IUserInfo[]) => {
+                return userList;
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    private partialFetchingUsers(uri: string): Promise<IUserInfo[]> {
+        let usersListItems: IUserInfo[] = [];
+
+        return this.xhr.get(uri).then((data: any) => {
+            const userList = data.getData().userList;
+            const {
+                userList: {
+                    items = [],
+                    paging: { next },
+                },
+            } = userList;
+
+            usersListItems = usersListItems.concat(items);
+
+            if (next) {
+                return this.partialFetchingUsers.call(this, next);
+            } else {
+                return usersListItems;
+            }
+        });
     }
 }

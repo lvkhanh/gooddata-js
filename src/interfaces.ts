@@ -319,3 +319,35 @@ export interface IAdHocItemDescription {
 }
 
 export type ItemDescription = IStoredItemDescription | IAdHocItemDescription;
+
+export interface IUsersListOptions {
+    offset?: number;
+    limit?: number;
+    prefixSearch?: string;
+    userState: string;
+}
+
+export interface IUserInfo {
+    email: string;
+    firstName: string;
+    lastName: string;
+    login: string;
+    roles: string[];
+    state: string;
+    uri: string;
+}
+
+export interface IUserPaging {
+    count: number;
+    limit: number;
+    next: string | null;
+    offset: number;
+    totalCount: number;
+}
+
+export interface IUserlistResults {
+    userList: {
+        items: IUserInfo[] | [];
+        paging: IUserPaging;
+    };
+}
