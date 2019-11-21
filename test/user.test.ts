@@ -1,4 +1,4 @@
-// (C) 2007-2014 GoodData Corporation
+// (C) 2007-2019 GoodData Corporation
 import "isomorphic-fetch";
 import fetchMock from "fetch-mock";
 import { UserModule } from "../src/user";
@@ -289,6 +289,60 @@ describe("user", () => {
                         expect(accountInfo.lastName).toEqual(lastName);
                         expect(accountInfo.organizationName).toEqual(organizationName);
                         expect(accountInfo.profileUri).toEqual(profileUri);
+                    });
+            });
+        });
+
+        describe("getUserConfig", () => {
+            it("should return user config setting items", () => {
+                expect.assertions(1);
+                const userId = "USER_ID";
+
+                fetchMock.mock(`/gdc/account/profile/${userId}/settings`, {
+                    status: 200,
+                    body: JSON.stringify({
+                        settings: {
+                            settingItem: [
+                                {
+                                    settingItem: {
+                                        key: "accuratePieChartEnabled",
+                                        value: false,
+                                        source: "catalog",
+                                        links: {
+                                            self:
+                                                "/gdc/account/profile/USER_ID/config/accuratePieChartEnabled",
+                                        },
+                                    },
+                                },
+                                {
+                                    settingItem: {
+                                        key: "activeFiltersByDefault",
+                                        value: false,
+                                        source: "user",
+                                        links: {
+                                            self:
+                                                "/gdc/account/profile/USER_ID/config/activeFiltersByDefault",
+                                        },
+                                    },
+                                },
+                                {
+                                    settingItem: {
+                                        key: "newUIEnabled",
+                                        value: "indigo",
+                                        source: "catalog",
+                                        links: {
+                                            self: "/gdc/account/profile/USER_ID/config/newUIEnabled",
+                                        },
+                                    },
+                                },
+                            ],
+                        },
+                    }),
+                });
+                return createUser()
+                    .getUserConfig(userId)
+                    .then(userConfig => {
+                        return expect(userConfig.length).toBe(3);
                     });
             });
         });
